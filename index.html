@@ -130,7 +130,14 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-300 mb-1.5">Contraseña</label>
-            <input type="password" id="login-password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl bg-slate-950/80 border border-white/10 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-400 transition" />
+            <div class="relative">
+              <input type="password" id="login-password" required placeholder="••••••••" class="w-full pl-4 pr-11 py-3 rounded-xl bg-slate-950/80 border border-white/10 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-400 transition" />
+              <button type="button" onclick="togglePasswordVisibility('login-password', this)" aria-label="Ver clave" class="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-emerald-300 text-xs font-bold transition">👁️</button>
+            </div>
+            <label class="inline-flex items-center gap-2 mt-2 cursor-pointer select-none">
+              <input type="checkbox" id="remember-password-check" class="w-3.5 h-3.5 accent-emerald-500 rounded" />
+              <span class="text-xs text-slate-400">Guardar clave para acceso más rápido</span>
+            </label>
           </div>
           <p id="login-error" class="hidden text-xs text-rose-400 font-medium"></p>
           <button type="submit" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-400 to-emerald-500 hover:from-emerald-300 hover:to-emerald-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/25 transition">
@@ -153,7 +160,17 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-300 mb-1.5">Contraseña</label>
-            <input type="password" id="reg-password" required minlength="4" placeholder="Mínimo 4 caracteres" class="w-full px-4 py-3 rounded-xl bg-slate-950/80 border border-white/10 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-400 transition" />
+            <div class="relative">
+              <input type="password" id="reg-password" required minlength="4" placeholder="Mínimo 4 caracteres" class="w-full pl-4 pr-11 py-3 rounded-xl bg-slate-950/80 border border-white/10 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-400 transition" />
+              <button type="button" onclick="togglePasswordVisibility('reg-password', this)" aria-label="Ver clave" class="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-emerald-300 text-xs font-bold transition">👁️</button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Repetir contraseña</label>
+            <div class="relative">
+              <input type="password" id="reg-password-confirm" required minlength="4" placeholder="Escribí la contraseña nuevamente" class="w-full pl-4 pr-11 py-3 rounded-xl bg-slate-950/80 border border-white/10 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-400 transition" />
+              <button type="button" onclick="togglePasswordVisibility('reg-password-confirm', this)" aria-label="Ver clave" class="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-emerald-300 text-xs font-bold transition">👁️</button>
+            </div>
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-300 mb-1.5">Diferido / Recomendado por (opcional)</label>
@@ -602,7 +619,10 @@
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Clave</label>
-          <input type="password" id="secret-admin-pass" required autocomplete="new-password" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-sm text-white focus:outline-none focus:border-amber-400" />
+          <div class="relative">
+            <input type="password" id="secret-admin-pass" required autocomplete="new-password" class="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-sm text-white focus:outline-none focus:border-amber-400" />
+            <button type="button" onclick="togglePasswordVisibility('secret-admin-pass', this)" aria-label="Ver clave" class="absolute inset-y-0 right-0 px-2.5 flex items-center text-slate-400 hover:text-amber-300 text-xs font-bold transition">👁️</button>
+          </div>
         </div>
         <p id="secret-admin-error" class="hidden text-xs text-rose-400 font-medium"></p>
         <button type="submit" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-sm transition">
@@ -907,8 +927,15 @@
       const phone = document.getElementById('reg-phone').value.trim();
       const email = document.getElementById('reg-email').value.trim().toLowerCase();
       const password = document.getElementById('reg-password').value;
+      const passwordConfirm = document.getElementById('reg-password-confirm').value;
       const referrerInput = document.getElementById('reg-referrer').value.trim();
       const err = document.getElementById('reg-error');
+
+      if (password !== passwordConfirm) {
+        err.textContent = 'Las contraseñas no coinciden. Verificá que sean iguales.';
+        err.classList.remove('hidden');
+        return;
+      }
 
       if (state.users.some(u => u.email === email)) {
         err.textContent = 'Ese correo ya está registrado.';
@@ -961,10 +988,36 @@
       showToast(referrerUser ? `¡Cuenta creada! ${referrerUser.name} recibió 1 boleta gratis.` : `¡Bienvenido, ${name}!`);
     };
 
+    const SAVED_CREDS_KEY = 'prodemaster_saved_creds_v1';
+
+    window.togglePasswordVisibility = function(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      if (btn) {
+        btn.textContent = isHidden ? '🙈' : '👁️';
+      }
+    };
+
+    function loadSavedLoginCreds() {
+      try {
+        const raw = localStorage.getItem(SAVED_CREDS_KEY);
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        if (saved && saved.email && saved.password) {
+          document.getElementById('login-email').value = saved.email;
+          document.getElementById('login-password').value = saved.password;
+          document.getElementById('remember-password-check').checked = true;
+        }
+      } catch (e) {}
+    }
+
     window.handleLogin = function(e) {
       e.preventDefault();
       const email = document.getElementById('login-email').value.trim().toLowerCase();
       const password = document.getElementById('login-password').value;
+      const remember = document.getElementById('remember-password-check').checked;
       const err = document.getElementById('login-error');
 
       const user = state.users.find(u => u.email === email && u.password === password);
@@ -974,6 +1027,11 @@
         return;
       }
       err.classList.add('hidden');
+      if (remember) {
+        localStorage.setItem(SAVED_CREDS_KEY, JSON.stringify({ email, password }));
+      } else {
+        localStorage.removeItem(SAVED_CREDS_KEY);
+      }
       session = { role: 'user', userId: user.id };
       saveSession();
       renderAll();
@@ -1927,6 +1985,7 @@
       }
     };
 
+    loadSavedLoginCreds();
     setInterval(updateCountdownBanner, 1000);
     renderAll();
     if (hasSupabaseConfig) {
